@@ -13,6 +13,7 @@ from skimage.exposure import rescale_intensity
 from skimage.filters import threshold_triangle, try_all_threshold
 from skimage.morphology import remove_small_objects, remove_small_holes, skeletonize, closing, selem
 from skimage.measure import label, regionprops
+from skimage.segmentation import felzenszwalb
 from skimage.color import label2rgb
 from scipy import ndimage as ndi
 import cv2
@@ -41,8 +42,8 @@ def gray2color(u,channel):
     return u_color
 
 
-#fille = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\test_photo.tif"
-fille = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\test_photo.tif"
+fille = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\test_photo.tif"
+#fille = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\test_photo.tif"
 img = tif.imread(fille)
 red_channel = img[:,:,0]
 one_d_red_channel = red_channel.flatten()
@@ -72,30 +73,68 @@ ax[1,1].hist(red_channel_rescale.flatten(), bins =10)
 ax[1,1].set_title("Binarised data")
 #segmenation with skimage 
 label_image = label(red_channel_rescale)
+cells_filter = []
 cells = []
 for i in regionprops(label_image):
     if i.area < 1000:
-        cells.append(i)
-for i in cells:
-    print(i.area)
+        cells.append(i.area)
+plt.hist(cells, bins= 80)
+for i in regionprops(label_image):
+    if 4 < i.area < 1000:
+        cells_filter.append(i)
+        
 
 
-df = pd.DataFrame(columns= ["X", "Y"])
-for i in cells:
+df = pd.DataFrame(columns= ["X", "Y", "X1", "Y1", "X2", "Y2"])
+for i in cells_filter:
     dict_to_apend = {"X": i.centroid[0], "Y": i.centroid[1]}
     df = df.append(dict_to_apend, ignore_index=True)
 fig, ax = plt.subplots(1,2, figsize = (50,50))
-ax.set_aspect["equal"]
+ax[0].set_aspect("equal")
+ax[0].scatter(df["Y"], df["X"]*-1, color ="r", alpha = 0.7)
+ax[0].set_title("My methods")
+ax[1].imshow(red_channel_rescale, cmap ="gray")
+ax[1].set_title("Binarised data")
+#segmentation with skimage and comercial filters
+Red_mask = remove_small_objects(red_channel_rescale.astype(np.bool), min_size = 4)
+Red_mask = remove_small_holes(Red_mask, area_threshold=2)
+cells_a = []
+label_image1 =label(Red_mask)
+for i in regionprops(label_image1):
+    if i.area < 1000:
+        cells_a.append(i)
 
-ax[0].scatter(df["Y"], df["X"]*-1)
+for i in cells_a:
+    dict_to_apend = {"X1": i.centroid[0], "Y1": i.centroid[1]}
+    df = df.append(dict_to_apend, ignore_index=True)
+fig, ax = plt.subplots(1,2, figsize = (50,50))
+ax[0].set_aspect("equal")
+ax[0].scatter(df["Y1"], df["X1"]*-1, color ="g", alpha = 0.7)
+ax[0].set_title("Commercial methods")
+ax[1].imshow(red_channel_rescale, cmap ="gray")
+#segmentation with felzenszwalb and comercial filters
+cells_b = []
+label_image2 = felzenszwalb(Red_mask, scale = 2)
+for i in regionprops(label_image2):
+    if i.area < 1000:
+        cells_b.append(i)
 
-#segmentation 
-s = [[1,1,1],
-     [1,1,1],
-     [1,1,1]]
-labeled_array, num_features = ndi.label(red_channel, structure = s)
-plt.imshow(labeled_array)
-plt.show()
+for i in cells_b:
+    dict_to_apend = {"X2": i.centroid[0], "Y2": i.centroid[1]}
+    df = df.append(dict_to_apend, ignore_index=True)
+    
+fig, ax = plt.subplots(1,3, figsize = (50,50))
+ax[0].set_aspect("equal")
+ax[0].scatter(df["Y2"], df["X2"]*-1, color ="m", alpha = 0.7, s =10, facecolors='none')
+ax[0].set_title("Felzenszwalb method")
+x_range = ax[0].get_xlim()
+y_range = ax[0].get_ylim()
 
+ax[1].imshow(red_channel_rescale, cmap ="gray")
+ax[1].set_title("Binarised data")
+x_range1 = ax[1].get_xlim()
+y_range1 = ax[1].get_ylim()
+mean_y = mean(y_range1)
+ax[2].imshow(red_channel_rescale, cmap ="gray", extent =[x_range[0], x_range[1], y_range[0], y_range[1]])
 
-
+ax[2].scatter(df["Y2"], df["X2"]*-1, color ="m", alpha = 0.7, s =10, facecolors='none')
