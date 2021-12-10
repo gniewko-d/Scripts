@@ -19,7 +19,8 @@ from scipy import ndimage as ndi
 import cv2
 import tifffile as tif
 #from gray2color import gray2color
-
+print ("Cycki są fajniejsze")
+print ("ale i tyłeczki rządzą")
 def gray2color(u,channel):
     """
     Compute color image from intensity in fluorescence in a given channel.
