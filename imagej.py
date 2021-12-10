@@ -42,8 +42,8 @@ def gray2color(u,channel):
     return u_color
 
 
-fille = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\test_photo.tif"
-#fille = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\test_photo.tif"
+#fille = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\test_photo.tif"
+fille = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\test_photo.tif"
 img = tif.imread(fille)
 red_channel = img[:,:,0]
 one_d_red_channel = red_channel.flatten()
@@ -135,6 +135,7 @@ ax[1].set_title("Binarised data")
 x_range1 = ax[1].get_xlim()
 y_range1 = ax[1].get_ylim()
 mean_y = mean(y_range1)
+d = 12
 ax[2].imshow(red_channel_rescale, cmap ="gray", extent =[x_range[0], x_range[1], y_range[0], y_range[1]])
 
 ax[2].scatter(df["Y2"], df["X2"]*-1, color ="m", alpha = 0.7, s =10, facecolors='none')
