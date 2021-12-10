@@ -22,6 +22,7 @@ import tifffile as tif
 
 print("DUAP DUPA")
 print("DUAP UPDAUSDSAOKJKTJPEOQRKA:W")
+print("iadjaslkfjaslkfjas;lfas;fja;")
 
 def gray2color(u,channel):
     """
