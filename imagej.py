@@ -23,6 +23,7 @@ print ("Cycki są fajniejsze")
 print ("ale i tyłeczki rządzą")
 print("jak kto woli")
 print("Kamil to covidowiec")
+print(" noga noga")
 def gray2color(u,channel):
     """
     Compute color image from intensity in fluorescence in a given channel.
