@@ -40,23 +40,33 @@ def gray2color(u,channel):
         ))
     return u_color
 
+file_original = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12.tiff"
 
-#fille = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\test_photo.tif"
-fille = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\test_photo.tif"
-img = tif.imread(fille)
-red_channel = img[:,:,0]
-one_d_red_channel = red_channel.flatten()
-red_channel_rescale = rescale_intensity(red_channel, out_range='float')
-red_channel_rescale1 = rescale_intensity(red_channel, out_range='float')
-# try diffrent method 
-fig, ax = try_all_threshold(red_channel_rescale, figsize=(30,30), verbose=True)
+#fille_flipped = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\test_photo.tif"
+fille_flipped = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\test_photo.tif"
+
+img_flipped = tif.imread(fille_flipped)
+img_original = tif.imread(file_original)
+
+
+red_channel_flipped = img_flipped[:,:,0]
+red_channel_original = img_original[:,:,0]
+
+red_channel_rescale = rescale_intensity(red_channel_flipped, out_range='float')
+red_channel_rescale1 = rescale_intensity(red_channel_flipped, out_range='float')
+
+red_channel_rescale_original = rescale_intensity(red_channel_original, out_range='float')
+fig, ax = try_all_threshold(red_channel_rescale_original, figsize=(30,30), verbose=True)
+
 
 # Chosen treshold method 
 fig, ax = plt.subplots(2,2, sharex=False, sharey=False, figsize=(30,30))
 ax[0,0].imshow(gray2color(red_channel_rescale,0))
 ax[0,0].set_title('Red channel')
+t1 = threshold_triangle(red_channel_rescale_original)
 t = threshold_triangle(red_channel_rescale)
-red_channel_rescale[red_channel_rescale<t] = 0
+
+red_channel_rescale[red_channel_rescale<t1] = 0
 red_channel_rescale[red_channel_rescale>0] = 1
 method_chosen = "threshold_triangle"
 ax[0,1].imshow(red_channel_rescale, cmap ="gray")
@@ -70,8 +80,11 @@ ax[1,0].axvline(t, color='r')
 
 ax[1,1].hist(red_channel_rescale.flatten(), bins =10)
 ax[1,1].set_title("Binarised data")
+
 #segmenation with skimage 
+#watershad ?
 label_image = label(red_channel_rescale)
+
 cells_filter = []
 cells = []
 for i in regionprops(label_image):
@@ -114,6 +127,7 @@ ax[1].imshow(red_channel_rescale, cmap ="gray")
 #segmentation with felzenszwalb and comercial filters
 cells_b = []
 label_image2 = felzenszwalb(Red_mask, scale = 2)
+plt.imshow(label_image2)
 for i in regionprops(label_image2):
     if i.area < 1000:
         cells_b.append(i)
@@ -133,8 +147,8 @@ ax[1].imshow(red_channel_rescale, cmap ="gray")
 ax[1].set_title("Binarised data")
 x_range1 = ax[1].get_xlim()
 y_range1 = ax[1].get_ylim()
-mean_y = mean(y_range1)
+#mean_y = mean(y_range1)
 d = 12
-ax[2].imshow(red_channel_rescale, cmap ="gray", extent =[x_range[0], x_range[1], y_range[0], y_range[1]])
+ax[2].imshow(red_channel_rescale, cmap ="gray", extent =[x_range[0] , x_range[1] -30, y_range[0], y_range[1] + 40])
 
 ax[2].scatter(df["Y2"], df["X2"]*-1, color ="m", alpha = 0.7, s =10, facecolors='none')
