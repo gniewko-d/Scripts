@@ -40,10 +40,10 @@ def gray2color(u,channel):
         ))
     return u_color
 
-#fille_original = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12.tiff"
-fille_original = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\RMTg_x5_12.tiff"
-fille_flipped = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\test_photo.tif"
-#fille_flipped = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\test_photo.tif"
+fille_original = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12.tiff"
+#fille_original = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\RMTg_x5_12.tiff"
+#fille_flipped = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\test_photo.tif"
+fille_flipped = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\test_photo.tif"
 
 img_flipped = tif.imread(fille_flipped)
 img_original = tif.imread(fille_original)
@@ -98,10 +98,14 @@ label_image2 = gray2color(label_image2,0)
 for i in cells_a:
     dict_to_apend = {"X1": i.centroid[0], "Y1": i.centroid[1]}
     df = df.append(dict_to_apend, ignore_index=True)
-fig, ax = plt.subplots(1,3, figsize = (50,50))
+fig, ax = plt.subplots(3,1, figsize = (50,50))
 ax[0].set_aspect("equal")
 ax[0].scatter(df["Y1"], df["X1"]*-1, color ="g", alpha = 0.7)
 ax[0].set_title("Commercial methods")
-ax[1].imshow(red_channel_rescale_original, cmap ="gray")
-ax[2].imshow(red_channel_rescale_original, cmap ="gray", alpha = 0.7)
-ax[2].imshow(label_image2)
+ax[1].imshow(red_channel_rescale_original, cmap ="gray" )
+y_min, y_max = ax[1].get_ylim()
+x_min, x_max = ax[1].get_xlim()
+ax[2].imshow(red_channel_rescale_original, cmap ="gray", extent = [x_min, x_max, y_min* -1, y_max* -1])
+ax[2].scatter(df["Y1"], df["X1"]*-1, color ="r", alpha = 0.7, facecolors='none', s =50)
+ax[2].set_xlim(x_min, x_max)
+ax[2].set_ylim(y_min* -1, y_max* -1)
