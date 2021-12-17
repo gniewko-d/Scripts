@@ -40,10 +40,10 @@ def gray2color(u,channel):
         ))
     return u_color
 
-#fille_original = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12.tiff"
-fille_original = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\RMTg_x5_12.tiff"
-fille_flipped = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\RMTg_x5_12_flipped.tif"
-#fille_flipped = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12_flipped.tif"
+fille_original = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12.tiff"
+#fille_original = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\RMTg_x5_12.tiff"
+#fille_flipped = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\RMTg_x5_12_flipped.tif"
+fille_flipped = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12_flipped.tif"
 
 img_flipped = cv2.imread(fille_flipped)
 img_original = cv2.imread(fille_original)
@@ -84,7 +84,7 @@ ax[1,1].set_title("Binarised data")
 
 #segmentation with skimage and comercial filters
 df = pd.DataFrame(columns= ["X", "Y", "X1", "Y1", "X2", "Y2"])
-Red_mask = remove_small_objects(red_channel_rescale.astype(np.uint8), min_size = 20)
+Red_mask = remove_small_objects(red_channel_rescale.astype(np.bool), min_size = 20)
 Red_mask = remove_small_holes(Red_mask, area_threshold=2)
 cells_a = []
 label_image1 =label(Red_mask)
@@ -111,13 +111,26 @@ ax[2].set_xlim(x_min, x_max)
 ax[2].set_ylim(y_min* -1, y_max* -1)
 
 # watershade approach
-i
+
 kernel = np.ones((3,3), np.uint8)
 red_mask_int = Red_mask.astype(np.float64)
 openning = cv2.morphologyEx(red_mask_int, cv2.MORPH_OPEN, kernel, iterations = 1)
-surebg = cv2.dilate(openning, kernel, iterations = 20)
+surebg = cv2.dilate(openning, kernel, iterations = 2)
+dist_transform = cv2.distanceTransform(openning.astype(np.uint8), cv2.DIST_L2, 3) # int = mask Size 
+ret, sure_fg = cv2.threshold(dist_transform, 0.2*dist_transform.max(), 255, 0)
+sure_fg = sure_fg.astype(np.uint8)
+unknown = cv2.subtract(surebg, sure_fg.astype(np.float64))
+
+ret1, markers = cv2.connectedComponents(sure_fg)
+markers = markers+10
 reszie = cv2.resize(surebg, (1000, 1000))
 reszie1 = cv2.resize(openning, (1000, 1000))
-cv2.imshow("Before", reszie)
+resize2 = cv2.resize(dist_transform, (1000, 1000))
+resize3 = cv2.resize(sure_fg, (1000, 1000))
+resize4 = cv2.resize(unknown, (1000, 1000))
+
+cv2.imshow("surebg", reszie)
 cv2.imshow("After", reszie1)
+cv2.imshow("Sure_FG", resize3)
+cv2.imshow("Unknow", resize4)
 cv2.waitKey(0)
