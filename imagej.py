@@ -18,7 +18,7 @@ from skimage.color import label2rgb
 from scipy import ndimage as ndi
 import cv2
 import tifffile as tif
-
+from skimage import measure, color, io
 def gray2color(u,channel):
     """
     Compute color image from intensity in fluorescence in a given channel.
@@ -40,10 +40,10 @@ def gray2color(u,channel):
         ))
     return u_color
 
-fille_original = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12.tiff"
-#fille_original = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\RMTg_x5_12.tiff"
-#fille_flipped = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\RMTg_x5_12_flipped.tif"
-fille_flipped = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12_flipped.tif"
+#fille_original = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12.tiff"
+fille_original = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\RMTg_x5_12.tiff"
+fille_flipped = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\RMTg_x5_12_flipped.tif"
+#fille_flipped = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12_flipped.tif"
 
 img_flipped = cv2.imread(fille_flipped)
 img_original = cv2.imread(fille_original)
@@ -110,7 +110,7 @@ ax[2].scatter(df["Y1"], df["X1"]*-1, color ="r", alpha = 0.7, facecolors='none',
 ax[2].set_xlim(x_min, x_max)
 ax[2].set_ylim(y_min* -1, y_max* -1)
 
-# watershade approach
+# watershed approach
 
 kernel = np.ones((3,3), np.uint8)
 red_mask_int = Red_mask.astype(np.float64)
@@ -123,14 +123,20 @@ unknown = cv2.subtract(surebg, sure_fg.astype(np.float64))
 
 ret1, markers = cv2.connectedComponents(sure_fg)
 markers = markers+10
+markers[unknown == 1] = 0
+markers = markers.astype(np.int32)
+markers = cv2.watershed(img_flipped, markers)
+img_flipped[markers == -1] = [0, 255, 255]
+img2 = color.label2rgb(markers, bg_label = 0)
 reszie = cv2.resize(surebg, (1000, 1000))
 reszie1 = cv2.resize(openning, (1000, 1000))
 resize2 = cv2.resize(dist_transform, (1000, 1000))
 resize3 = cv2.resize(sure_fg, (1000, 1000))
 resize4 = cv2.resize(unknown, (1000, 1000))
-
+resize5 = cv2.resize(img2, (1000, 1000))
 cv2.imshow("surebg", reszie)
 cv2.imshow("After", reszie1)
 cv2.imshow("Sure_FG", resize3)
 cv2.imshow("Unknow", resize4)
+cv2.imshow("watershed", resize5)
 cv2.waitKey(0)
