@@ -40,10 +40,10 @@ def gray2color(u,channel):
         ))
     return u_color
 
-#fille_original = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12.tiff"
-fille_original = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\RMTg_x5_12.tiff"
-fille_flipped = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\RMTg_x5_12_flipped.tif"
-#fille_flipped = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12_flipped.tif"
+fille_original = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12.tiff"
+#fille_original = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\RMTg_x5_12.tiff"
+#fille_flipped = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\RMTg_x5_12_flipped.tif"
+fille_flipped = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12_flipped.tif"
 
 img_flipped = cv2.imread(fille_flipped)
 img_original = cv2.imread(fille_original)
@@ -115,9 +115,9 @@ ax[2].set_ylim(y_min* -1, y_max* -1)
 kernel = np.ones((3,3), np.uint8)
 red_mask_int = Red_mask.astype(np.float64)
 openning = cv2.morphologyEx(red_mask_int, cv2.MORPH_OPEN, kernel, iterations = 1)
-surebg = cv2.dilate(openning, kernel, iterations = 2)
-dist_transform = cv2.distanceTransform(openning.astype(np.uint8), cv2.DIST_L2, 3) # int = mask Size 
-ret, sure_fg = cv2.threshold(dist_transform, 0.2*dist_transform.max(), 255, 0)
+surebg = cv2.dilate(openning, kernel, iterations = 1)
+dist_transform = cv2.distanceTransform(openning.astype(np.uint8), cv2.DIST_L2, 0) # int = mask Size 
+ret, sure_fg = cv2.threshold(dist_transform, 0.01*dist_transform.max(), 255, 3)
 sure_fg = sure_fg.astype(np.uint8)
 unknown = cv2.subtract(surebg, sure_fg.astype(np.float64))
 
@@ -128,34 +128,34 @@ markers = markers.astype(np.int32)
 markers = cv2.watershed(img_flipped, markers)
 img_flipped[markers == -1] = [0, 255, 255]
 img2 = color.label2rgb(markers, bg_label = 0)
-#reszie = cv2.resize(surebg, (1000, 1000))
-#reszie1 = cv2.resize(openning, (1000, 1000))
-#resize2 = cv2.resize(dist_transform, (1000, 1000))
-#resize3 = cv2.resize(sure_fg, (1000, 1000))
-#resize4 = cv2.resize(unknown, (1000, 1000))
-#resize5 = cv2.resize(img2, (1000, 1000))
-#cv2.imshow("surebg", reszie)
-#cv2.imshow("After", reszie1)
-#cv2.imshow("Sure_FG", resize3)
-#cv2.imshow("Unknow", resize4)
-#cv2.imshow("watershed", resize5)
-#cv2.waitKey(0)
+reszie = cv2.resize(surebg, (1000, 1000))
+reszie1 = cv2.resize(openning, (1000, 1000))
+resize2 = cv2.resize(dist_transform, (1000, 1000))
+resize3 = cv2.resize(sure_fg, (1000, 1000))
+resize4 = cv2.resize(unknown, (1000, 1000))
+resize5 = cv2.resize(img2, (1000, 1000))
+cv2.imshow("surebg", reszie)
+cv2.imshow("opening", reszie1)
+cv2.imshow("Sure_FG", resize3)
+cv2.imshow("Unknow", resize4)
+cv2.imshow("watershed", resize5)
+cv2.waitKey(0)
 cells_watershed = []
-for i in regionprops(label_image1):
+for i in regionprops(markers):
     if i.area < 1000:
         cells_watershed.append(i)
 df_watershed = pd.DataFrame(columns= ["X", "Y"])
-for i in cells_a:
+for i in cells_watershed:
     dict_to_apend = {"X": i.centroid[0], "Y": i.centroid[1]}
     df_watershed = df_watershed.append(dict_to_apend, ignore_index=True)
-fig, ax = plt.subplots(3,1, figsize = (50,50))
+fig1, ax = plt.subplots(3,1, figsize = (50,50))
 ax[0].set_aspect("equal")
-ax[0].scatter(df["Y1"], df["X1"]*-1, color ="g", alpha = 0.7)
+ax[0].scatter(df_watershed["Y"], df_watershed["X"]*-1, color ="g", alpha = 0.7)
 ax[0].set_title("Watershed")
 ax[1].imshow(red_channel_rescale, cmap ="gray" )
 y_min, y_max = ax[1].get_ylim()
 x_min, x_max = ax[1].get_xlim()
 ax[2].imshow(red_channel_rescale, cmap ="gray", extent = [x_min, x_max, y_min* -1, y_max* -1])
-ax[2].scatter(df["Y1"], df["X1"]*-1, color ="r", alpha = 0.7, facecolors='none', s =50)
+ax[2].scatter(df_watershed["Y"], df_watershed["X"]*-1, color ="g", alpha = 0.7, facecolors='none', s =50)
 ax[2].set_xlim(x_min, x_max)
 ax[2].set_ylim(y_min* -1, y_max* -1)
