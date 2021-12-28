@@ -17,6 +17,7 @@ from skimage.segmentation import felzenszwalb
 from skimage.color import label2rgb
 from scipy import ndimage as ndi
 import cv2
+import glob
 import tifffile as tif
 from skimage import measure, color, io
 def gray2color(u,channel):
@@ -40,10 +41,16 @@ def gray2color(u,channel):
         ))
     return u_color
 
-fille_original = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12.tiff"
-#fille_original = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\RMTg_x5_12.tiff"
-#fille_flipped = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\RMTg_x5_12_flipped.tif"
-fille_flipped = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12_flipped.tif"
+
+
+df_watershed = pd.DataFrame(columns= ["X", "Y"])
+
+
+
+#fille_original = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12.tiff"
+fille_original = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\RMTg_x5_12.tiff"
+fille_flipped = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\RMTg_x5_12_flipped.tiff"
+#fille_flipped = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12_flipped.tif"
 
 img_flipped = cv2.imread(fille_flipped)
 img_original = cv2.imread(fille_original)
@@ -112,12 +119,14 @@ ax[2].set_ylim(y_min* -1, y_max* -1)
 
 # watershed approach
 
-kernel = np.ones((3,3), np.uint8)
+kernel = np.ones((2,2), np.uint8)
 red_mask_int = Red_mask.astype(np.float64)
+#eroded = cv2.erode(red_mask_int, kernel, iterations = 3)
 openning = cv2.morphologyEx(red_mask_int, cv2.MORPH_OPEN, kernel, iterations = 1)
-surebg = cv2.dilate(openning, kernel, iterations = 1)
-dist_transform = cv2.distanceTransform(openning.astype(np.uint8), cv2.DIST_L2, 0) # int = mask Size 
-ret, sure_fg = cv2.threshold(dist_transform, 0.01*dist_transform.max(), 255, 3)
+#openning = cv2.morphologyEx(eroded, cv2.MORPH_OPEN, kernel, iterations = 1)
+surebg = cv2.dilate(openning, kernel, iterations = 5)
+dist_transform = cv2.distanceTransform(openning.astype(np.uint8), cv2.DIST_L2, 3) # int = mask Size 
+ret, sure_fg = cv2.threshold(dist_transform, 0.45*dist_transform.max(), 255, 0) # the mbigger the  treshold the more watersheded are cells but small cell are lost
 sure_fg = sure_fg.astype(np.uint8)
 unknown = cv2.subtract(surebg, sure_fg.astype(np.float64))
 
@@ -139,10 +148,11 @@ cv2.imshow("opening", reszie1)
 cv2.imshow("Sure_FG", resize3)
 cv2.imshow("Unknow", resize4)
 cv2.imshow("watershed", resize5)
+cv2.imshow("kupa", resize2)
 cv2.waitKey(0)
 cells_watershed = []
 for i in regionprops(markers):
-    if i.area < 1000:
+    if i.area < 500:
         cells_watershed.append(i)
 df_watershed = pd.DataFrame(columns= ["X", "Y"])
 for i in cells_watershed:
@@ -156,6 +166,7 @@ ax[1].imshow(red_channel_rescale, cmap ="gray" )
 y_min, y_max = ax[1].get_ylim()
 x_min, x_max = ax[1].get_xlim()
 ax[2].imshow(red_channel_rescale, cmap ="gray", extent = [x_min, x_max, y_min* -1, y_max* -1])
-ax[2].scatter(df_watershed["Y"], df_watershed["X"]*-1, color ="g", alpha = 0.7, facecolors='none', s =50)
+ax[2].scatter(df_watershed["Y"], df_watershed["X"]*-1, color ="y", alpha = 0.7, facecolors='none', s =50)
 ax[2].set_xlim(x_min, x_max)
 ax[2].set_ylim(y_min* -1, y_max* -1)
+result = pd.DataFrame(columns= ["","X", "Y"])
