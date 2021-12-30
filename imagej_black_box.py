@@ -44,15 +44,16 @@ def gray2color(u,channel):
         ))
     return u_color
 
-path_orginall = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\batch_original\\*.*"
-path_flipped = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\batch_flipped\\*.*"
-
+#path_orginall = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\batch_original\\*.*"
+#path_flipped = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\batch_flipped\\*.*"
+path_orginall ="C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\batch_original\\*.*"
+path_flipped = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\batch_flipped\\*.*"
 orginal_list = glob.glob(path_orginall)
 flipped_list = glob.glob(path_flipped)
 
 czarek = orginal_list[0].split("\\")
-last_word = czarek[7].split("_")
-
+#last_word = czarek[7].split("_")
+last_word = czarek[9].split("_")
 
 def eve(o, f):
     df_watershed = pd.DataFrame(columns= ["X", "Y", "rat_id", "AP"])
@@ -60,7 +61,8 @@ def eve(o, f):
     result = pd.DataFrame(columns = ["cells", "rat_id", "AP"])
     for i in range(len(o)):
         czarek = o[i].split("\\")
-        last_word = czarek[7].split("_")
+        #last_word = czarek[7].split("_")
+        last_word = czarek[9].split("_")
         img_flipped = cv2.imread(f[i])
         img_original = cv2.imread(o[i])
         red_channel_flipped = img_flipped[:,:,2]

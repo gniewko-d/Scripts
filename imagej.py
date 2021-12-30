@@ -47,10 +47,10 @@ df_watershed = pd.DataFrame(columns= ["X", "Y"])
 
 
 
-#fille_original = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12.tiff"
-fille_original = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\RMTg_x5_12.tiff"
-fille_flipped = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\RMTg_x5_12_flipped.tiff"
-#fille_flipped = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12_flipped.tif"
+fille_original = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12.tiff"
+#fille_original = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\RMTg_x5_12.tiff"
+#fille_flipped = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\RMTg_x5_12_flipped.tiff"
+fille_flipped = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\RMTg_x5_12_flipped.tif"
 
 img_flipped = cv2.imread(fille_flipped)
 img_original = cv2.imread(fille_original)
@@ -126,7 +126,7 @@ openning = cv2.morphologyEx(red_mask_int, cv2.MORPH_OPEN, kernel, iterations = 1
 #openning = cv2.morphologyEx(eroded, cv2.MORPH_OPEN, kernel, iterations = 1)
 surebg = cv2.dilate(openning, kernel, iterations = 5)
 dist_transform = cv2.distanceTransform(openning.astype(np.uint8), cv2.DIST_L2, 3) # int = mask Size 
-ret, sure_fg = cv2.threshold(dist_transform, 0.45*dist_transform.max(), 255, 0) # the mbigger the  treshold the more watersheded are cells but small cell are lost
+ret, sure_fg = cv2.threshold(dist_transform, 0.35*dist_transform.max(), 255, 0) # the mbigger the  treshold the more watersheded are cells but small cell are lost
 sure_fg = sure_fg.astype(np.uint8)
 unknown = cv2.subtract(surebg, sure_fg.astype(np.float64))
 
