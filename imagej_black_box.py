@@ -44,25 +44,30 @@ def gray2color(u,channel):
         ))
     return u_color
 
-#path_orginall = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\batch_original\\*.*"
-#path_flipped = "C:\\Users\\malgo\\Desktop\\python\\rmtg\\batch_flipped\\*.*"
-path_orginall ="C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\batch_original\\*.*"
-path_flipped = "C:\\Users\\gniew\\OneDrive\\Pulpit\\python\\moje\\rmtg\\batch_flipped\\*.*"
-orginal_list = glob.glob(path_orginall)
-flipped_list = glob.glob(path_flipped)
+path_orginall = input("pls enter a path to batch_original folder: ")
+path_orginall = path_orginall.replace("/", "//")
+path_flipped =  input("pls enter a path to batch_flipped folder: ")
+path_flipped = path_flipped.replace("/", "//")
+save = input("please enter the path to the folder where the analysis will be saved: " )
+save = path_flipped.replace("/", "//")
+path_orginall_full = path_orginall + "\\*.*"
+path_flipped_full = path_flipped + "\\*.*"
 
-czarek = orginal_list[0].split("\\")
-#last_word = czarek[7].split("_")
-last_word = czarek[9].split("_")
+orginal_list = glob.glob(path_orginall_full)
+flipped_list = glob.glob(path_flipped_full)
 
-def eve(o, f):
+
+
+
+
+def eve(o, f, save = False):
     df_watershed = pd.DataFrame(columns= ["X", "Y", "rat_id", "AP"])
-    df = pd.DataFrame(columns= ["X", "Y", "X1", "Y1", "X2", "Y2"])
-    result = pd.DataFrame(columns = ["cells", "rat_id", "AP"])
+    df_comercial_labeling = pd.DataFrame(columns= ["X", "Y", "rat_id", "AP"])
+    result_watershed = pd.DataFrame(columns = ["cells", "rat_id", "AP"])
+    result_comercial_labeling = pd.DataFrame(columns = ["cells", "rat_id", "AP"])
     for i in range(len(o)):
         czarek = o[i].split("\\")
-        #last_word = czarek[7].split("_")
-        last_word = czarek[9].split("_")
+        last_word = czarek[-1].split("_")
         img_flipped = cv2.imread(f[i])
         img_original = cv2.imread(o[i])
         red_channel_flipped = img_flipped[:,:,2]
@@ -73,27 +78,10 @@ def eve(o, f):
 
         red_channel_rescale_original = rescale_intensity(red_channel_original, out_range='float')
         # Chosen treshold method 
-        fig, ax = plt.subplots(2,2, sharex=False, sharey=False, figsize=(30,30))
-        ax[0,0].imshow(gray2color(red_channel_rescale,0))
-        ax[0,0].set_title('Red channel')
-
         t = threshold_triangle(red_channel_rescale_original)
-
+        
         red_channel_rescale[red_channel_rescale<t] = 0
         red_channel_rescale[red_channel_rescale>0] = 1
-        method_chosen = "threshold_triangle"
-        ax[0,1].imshow(red_channel_rescale, cmap ="gray")
-        ax[0,1].set_title(f'Threshold red channel, method: {method_chosen}')
-
-
-        ax[1,0].hist(red_channel_rescale1.flatten(), bins =100)
-        ax[1,0].set_title("Histogram from orginal data with treshold line")
-        ax[1,0].set_xticks(np.arange(0, 1.1, 0.1))
-        ax[1,0].axvline(t, color='r')
-
-        ax[1,1].hist(red_channel_rescale.flatten(), bins =10)
-        ax[1,1].set_title("Binarised data")
-
 
 #segmentation with skimage and comercial filters
         Red_mask = remove_small_objects(red_channel_rescale.astype(np.bool), min_size = 20)
@@ -103,21 +91,19 @@ def eve(o, f):
         for j in regionprops(label_image1):
             if j.area < 1000:
                 cells_a.append(j)
-        label_image2 = label_image1
-        label_image2[label_image2>0]
-        label_image2 = gray2color(label_image2,0)
+        
         for k in cells_a:
-            dict_to_apend = {"X1": k.centroid[0], "Y1": k.centroid[1]}
-            df = df.append(dict_to_apend, ignore_index=True)
+            dict_to_apend = {"X": k.centroid[0], "Y": k.centroid[1]}
+            df_comercial_labeling = df_comercial_labeling.append(dict_to_apend, ignore_index=True)
         fig, ax = plt.subplots(3,1, figsize = (50,50))
         ax[0].set_aspect("equal")
-        ax[0].scatter(df["Y1"], df["X1"]*-1, color ="g", alpha = 0.7)
-        ax[0].set_title("Commercial methods")
+        ax[0].scatter(df_comercial_labeling["Y"], df_comercial_labeling["X"]*-1, color ="g", alpha = 0.7)
+        ax[0].set_title(f"Commercial methods, {last_word[0]} AP: {last_word[1]}")
         ax[1].imshow(red_channel_rescale, cmap ="gray" )
         y_min, y_max = ax[1].get_ylim()
         x_min, x_max = ax[1].get_xlim()
         ax[2].imshow(red_channel_rescale, cmap ="gray", extent = [x_min, x_max, y_min* -1, y_max* -1])
-        ax[2].scatter(df["Y1"], df["X1"]*-1, color ="r", alpha = 0.7, facecolors='none', s =50)
+        ax[2].scatter(df_comercial_labeling["Y"], df_comercial_labeling["X"]*-1, color ="r", alpha = 0.7, facecolors='none', s =50)
         ax[2].set_xlim(x_min, x_max)
         ax[2].set_ylim(y_min* -1, y_max* -1)
        
@@ -125,7 +111,6 @@ def eve(o, f):
         
         kernel = np.ones((2,2), np.uint8)
         red_mask_int = Red_mask.astype(np.float64)
-        #eroded = cv2.erode(red_mask_int, kernel, iterations = 3)
         openning = cv2.morphologyEx(red_mask_int, cv2.MORPH_OPEN, kernel, iterations = 1)
         #openning = cv2.morphologyEx(eroded, cv2.MORPH_OPEN, kernel, iterations = 1)
         surebg = cv2.dilate(openning, kernel, iterations = 5)
@@ -163,7 +148,7 @@ def eve(o, f):
             dict_to_apend = {"X": m.centroid[0], "Y": m.centroid[1], "rat_id": last_word[0], "AP": last_word[1]}
             df_watershed = df_watershed.append(dict_to_apend, ignore_index=True)
         dict2_to_apend = {"cells": len(cells_watershed), "rat_id": last_word[0], "AP": last_word[1]}
-        result = result.append(dict2_to_apend, ignore_index=True)
+        result_watershed_watershed = result_watershed_watershed.append(dict2_to_apend, ignore_index=True)
         fig1, ax = plt.subplots(3,1, figsize = (50,50))
         ax[0].set_aspect("equal")
         ax[0].scatter(df_watershed["Y"], df_watershed["X"]*-1, color ="g", alpha = 0.7)
@@ -176,6 +161,6 @@ def eve(o, f):
         ax[2].set_xlim(x_min, x_max)
         ax[2].set_ylim(y_min* -1, y_max* -1)
         
-    return df_watershed, result
+    return df_watershed, result_watershed_watershed
 
-water, result = eve(orginal_list, flipped_list)
+water, result_watershed_watershed = eve(orginal_list, flipped_list)
