@@ -44,23 +44,7 @@ def gray2color(u,channel):
         ))
     return u_color
 
-path_orginall = input("pls enter a path to batch_original folder: ")
-path_orginall = path_orginall.replace("/", "//")
-path_flipped =  input("pls enter a path to batch_flipped folder: ")
-path_flipped = path_flipped.replace("/", "//")
-save = input("please enter the path to the folder where the analysis will be saved: " )
-save = path_flipped.replace("/", "//")
-path_orginall_full = path_orginall + "\\*.*"
-path_flipped_full = path_flipped + "\\*.*"
-
-orginal_list = glob.glob(path_orginall_full)
-flipped_list = glob.glob(path_flipped_full)
-
-
-
-
-
-def eve(o, f, save = False):
+def eve(o, f, saves = False):
     df_watershed = pd.DataFrame(columns= ["X", "Y", "rat_id", "AP"])
     df_comercial_labeling = pd.DataFrame(columns= ["X", "Y", "rat_id", "AP"])
     result_watershed = pd.DataFrame(columns = ["cells", "rat_id", "AP"])
@@ -93,8 +77,10 @@ def eve(o, f, save = False):
                 cells_a.append(j)
         
         for k in cells_a:
-            dict_to_apend = {"X": k.centroid[0], "Y": k.centroid[1]}
+            dict_to_apend = {"X": k.centroid[0], "Y": k.centroid[1], "rat_id": last_word[0], "AP": last_word[1]}
             df_comercial_labeling = df_comercial_labeling.append(dict_to_apend, ignore_index=True)
+        dict3_to_apend = {"cells": len(cells_a), "rat_id": last_word[0], "AP": last_word[1]}
+        result_comercial_labeling = result_comercial_labeling.append(dict3_to_apend, ignore_index=True)
         fig, ax = plt.subplots(3,1, figsize = (50,50))
         ax[0].set_aspect("equal")
         ax[0].scatter(df_comercial_labeling["Y"], df_comercial_labeling["X"]*-1, color ="g", alpha = 0.7)
@@ -106,7 +92,8 @@ def eve(o, f, save = False):
         ax[2].scatter(df_comercial_labeling["Y"], df_comercial_labeling["X"]*-1, color ="r", alpha = 0.7, facecolors='none', s =50)
         ax[2].set_xlim(x_min, x_max)
         ax[2].set_ylim(y_min* -1, y_max* -1)
-       
+        if saves != False:
+            fig.savefig(save + f"\\commercial_method_{last_word[0]}_{last_word[1]}.jpg")
         # watershed approach
         
         kernel = np.ones((2,2), np.uint8)
@@ -126,19 +113,6 @@ def eve(o, f, save = False):
         markers = cv2.watershed(img_flipped, markers)
         img_flipped[markers == -1] = [0, 255, 255]
         img2 = color.label2rgb(markers, bg_label = 0)
-        #reszie = cv2.resize(surebg, (1000, 1000))
-        #reszie1 = cv2.resize(openning, (1000, 1000))
-        #resize2 = cv2.resize(dist_transform, (1000, 1000))
-        #resize3 = cv2.resize(sure_fg, (1000, 1000))
-        #resize4 = cv2.resize(unknown, (1000, 1000))
-        #resize5 = cv2.resize(img2, (1000, 1000))
-        #cv2.imshow("surebg", reszie)
-        #cv2.imshow("opening", reszie1)
-        #cv2.imshow("Sure_FG", resize3)
-        #cv2.imshow("Unknow", resize4)
-        #cv2.imshow("watershed", resize5)
-        #cv2.imshow("kupa", resize2)
-        #cv2.waitKey(0)
         cells_watershed = []
         for l in regionprops(markers):
             if l.area < 500:
@@ -148,19 +122,33 @@ def eve(o, f, save = False):
             dict_to_apend = {"X": m.centroid[0], "Y": m.centroid[1], "rat_id": last_word[0], "AP": last_word[1]}
             df_watershed = df_watershed.append(dict_to_apend, ignore_index=True)
         dict2_to_apend = {"cells": len(cells_watershed), "rat_id": last_word[0], "AP": last_word[1]}
-        result_watershed_watershed = result_watershed_watershed.append(dict2_to_apend, ignore_index=True)
+        result_watershed = result_watershed.append(dict2_to_apend, ignore_index=True)
         fig1, ax = plt.subplots(3,1, figsize = (50,50))
         ax[0].set_aspect("equal")
         ax[0].scatter(df_watershed["Y"], df_watershed["X"]*-1, color ="g", alpha = 0.7)
-        ax[0].set_title("Watershed")
-        ax[1].imshow(red_channel_rescale, cmap ="gray" )
+        ax[0].set_title(f"Watershed, {last_word[0]} AP: {last_word[1]}")
+        ax[1].imshow(red_channel_rescale, cmap ="gray")
         y_min, y_max = ax[1].get_ylim()
         x_min, x_max = ax[1].get_xlim()
         ax[2].imshow(red_channel_rescale, cmap ="gray", extent = [x_min, x_max, y_min* -1, y_max* -1])
         ax[2].scatter(df_watershed["Y"], df_watershed["X"]*-1, color ="y", alpha = 0.7, facecolors='none', s =50)
         ax[2].set_xlim(x_min, x_max)
         ax[2].set_ylim(y_min* -1, y_max* -1)
-        
-    return df_watershed, result_watershed_watershed
+        if saves != False:
+            fig1.savefig(save + f"\\watershed_{last_word[0]}_{last_word[1]}.jpg")
+    return df_watershed, result_watershed, df_comercial_labeling, result_comercial_labeling
 
-water, result_watershed_watershed = eve(orginal_list, flipped_list)
+
+path_orginall = input("pls enter a path to batch_original folder: ")
+path_orginall = path_orginall.replace("/", "//")
+path_flipped =  input("pls enter a path to batch_flipped folder: ")
+path_flipped = path_flipped.replace("/", "//")
+save = input("please enter the path to the folder where the analysis will be saved: " )
+save = save.replace("/", "//")
+path_orginall_full = path_orginall + "\\*.*"
+path_flipped_full = path_flipped + "\\*.*"
+
+orginal_list = glob.glob(path_orginall_full)
+flipped_list = glob.glob(path_flipped_full)
+
+water, result_watershed, labeling, result_comercial = eve(orginal_list, flipped_list, saves = save)
