@@ -6,10 +6,8 @@ Created on Sat Dec 25 11:56:09 2021
 """
 
 import pandas as pd
-from copy import copy
 import numpy as np
 import matplotlib.pyplot as plt
-from skimage.io import imread
 from skimage.exposure import rescale_intensity
 from skimage.filters import threshold_triangle, try_all_threshold
 from skimage.morphology import remove_small_objects, remove_small_holes, skeletonize, closing, selem
@@ -73,7 +71,7 @@ def eve(o, f, saves = False):
         cells_a = []
         label_image1 =label(Red_mask)
         for j in regionprops(label_image1):
-            if j.area < 1000:
+            if j.area < 500:
                 cells_a.append(j)
         
         for k in cells_a:
@@ -81,15 +79,16 @@ def eve(o, f, saves = False):
             df_comercial_labeling = df_comercial_labeling.append(dict_to_apend, ignore_index=True)
         dict3_to_apend = {"cells": len(cells_a), "rat_id": last_word[0], "AP": last_word[1]}
         result_comercial_labeling = result_comercial_labeling.append(dict3_to_apend, ignore_index=True)
+        
         fig, ax = plt.subplots(3,1, figsize = (50,50))
         ax[0].set_aspect("equal")
-        ax[0].scatter(df_comercial_labeling["Y"], df_comercial_labeling["X"]*-1, color ="g", alpha = 0.7)
+        ax[0].scatter(df_comercial_labeling.loc[((df_comercial_labeling["rat_id"] == last_word[0]) & (df_comercial_labeling["AP"] == last_word[1])), "Y"], df_comercial_labeling.loc[((df_comercial_labeling["rat_id"] == last_word[0]) & (df_comercial_labeling["AP"] == last_word[1])), "X"]*-1, color ="g", alpha = 0.7)
         ax[0].set_title(f"Commercial methods, {last_word[0]} AP: {last_word[1]}")
-        ax[1].imshow(red_channel_rescale, cmap ="gray" )
+        ax[1].imshow(red_channel_rescale, cmap ="gray")
         y_min, y_max = ax[1].get_ylim()
         x_min, x_max = ax[1].get_xlim()
         ax[2].imshow(red_channel_rescale, cmap ="gray", extent = [x_min, x_max, y_min* -1, y_max* -1])
-        ax[2].scatter(df_comercial_labeling["Y"], df_comercial_labeling["X"]*-1, color ="r", alpha = 0.7, facecolors='none', s =50)
+        ax[2].scatter(df_comercial_labeling.loc[((df_comercial_labeling["rat_id"] == last_word[0]) & (df_comercial_labeling["AP"] == last_word[1])), "Y"], df_comercial_labeling.loc[((df_comercial_labeling["rat_id"] == last_word[0]) & (df_comercial_labeling["AP"] == last_word[1])), "X"]*-1, color ="r", alpha = 0.7, facecolors='none', s =50)
         ax[2].set_xlim(x_min, x_max)
         ax[2].set_ylim(y_min* -1, y_max* -1)
         if saves != False:
@@ -102,7 +101,7 @@ def eve(o, f, saves = False):
         #openning = cv2.morphologyEx(eroded, cv2.MORPH_OPEN, kernel, iterations = 1)
         surebg = cv2.dilate(openning, kernel, iterations = 5)
         dist_transform = cv2.distanceTransform(openning.astype(np.uint8), cv2.DIST_L2, 3) # int = mask Size 
-        ret, sure_fg = cv2.threshold(dist_transform, 0.45*dist_transform.max(), 255, 0) # the mbigger the  treshold the more watersheded are cells but small cell are lost
+        ret, sure_fg = cv2.threshold(dist_transform, 0.05*dist_transform.max(), 255, 0) # the mbigger the  treshold the more watersheded are cells but small cell are lost
         sure_fg = sure_fg.astype(np.uint8)
         unknown = cv2.subtract(surebg, sure_fg.astype(np.float64))
 
@@ -125,13 +124,13 @@ def eve(o, f, saves = False):
         result_watershed = result_watershed.append(dict2_to_apend, ignore_index=True)
         fig1, ax = plt.subplots(3,1, figsize = (50,50))
         ax[0].set_aspect("equal")
-        ax[0].scatter(df_watershed["Y"], df_watershed["X"]*-1, color ="g", alpha = 0.7)
+        ax[0].scatter(df_watershed.loc[((df_watershed["rat_id"] == last_word[0]) & (df_watershed["AP"] == last_word[1])), "Y"], df_watershed.loc[((df_watershed["rat_id"] == last_word[0]) & (df_watershed["AP"] == last_word[1])), "X"]*-1, color ="g", alpha = 0.7)
         ax[0].set_title(f"Watershed, {last_word[0]} AP: {last_word[1]}")
         ax[1].imshow(red_channel_rescale, cmap ="gray")
         y_min, y_max = ax[1].get_ylim()
         x_min, x_max = ax[1].get_xlim()
         ax[2].imshow(red_channel_rescale, cmap ="gray", extent = [x_min, x_max, y_min* -1, y_max* -1])
-        ax[2].scatter(df_watershed["Y"], df_watershed["X"]*-1, color ="y", alpha = 0.7, facecolors='none', s =50)
+        ax[2].scatter(df_watershed.loc[((df_watershed["rat_id"] == last_word[0]) & (df_watershed["AP"] == last_word[1])), "Y"], df_watershed.loc[((df_watershed["rat_id"] == last_word[0]) & (df_watershed["AP"] == last_word[1])), "X"]*-1, color ="y", alpha = 0.7, facecolors='none', s =50)
         ax[2].set_xlim(x_min, x_max)
         ax[2].set_ylim(y_min* -1, y_max* -1)
         if saves != False:
@@ -152,3 +151,4 @@ orginal_list = glob.glob(path_orginall_full)
 flipped_list = glob.glob(path_flipped_full)
 
 water, result_watershed, labeling, result_comercial = eve(orginal_list, flipped_list, saves = save)
+ 
