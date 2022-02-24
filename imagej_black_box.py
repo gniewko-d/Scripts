@@ -151,4 +151,5 @@ orginal_list = glob.glob(path_orginall_full)
 flipped_list = glob.glob(path_flipped_full)
 
 water, result_watershed, labeling, result_comercial = eve(orginal_list, flipped_list, saves = save)
+print("End day")
  
